@@ -3,73 +3,32 @@
 #include <vector>
 #include <cmath>
 
+#include "vector.hpp"
+#include "triangle.hpp"
+#include "objreader.hpp"
+
 using namespace std;
 
-class Vector {
-public:
-    double x = 0;
-    double y = 0;
-    double z = 0;
-
-    Vector() {}
-
-    Vector(double c) {
-        x = y = z = c;
-    }
-
-    Vector(double x, double y, double z): x(x), y(y), z(z) {}
-
-    Vector normalize() {
-        double length = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-        return Vector(x / length, y / length, z / length);
-    }
-};
-
-class Triangle{
-public:
-    Vector a;
-    Vector b;
-    Vector c;
-
-    Triangle(Vector a, Vector b, Vector c): a(a), b(b), c(c) {}
-};
-
-Vector vector_cross_product(Vector a, Vector b) {
-    double x = a.y * b.z - a.z * b.y;
-    double y = a.z * b.x - a.x * b.z;
-    double z = a.x * b.y - a.y * b.x;
-
-    return Vector(x, y, z);
-}
-
-double vector_dot_product(Vector a, Vector b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-Vector vector_subtract(Vector a, Vector b) {
-    return Vector(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-
 double moller_triangle_intersect(Vector origin, Vector destination, Vector t1, Vector t2, Vector t3) {
-    Vector t1t2 = vector_subtract(t1, t2);
-    Vector t1t3 = vector_subtract(t1, t3);
-    Vector p_vec = vector_cross_product(destination, t1t3);
-    double det = vector_dot_product(t1t2, p_vec);
+    Vector t1t2 = t1 - t2;
+    Vector t1t3 = t1 - t3;
+    Vector p_vec = destination * t1t3;
+    double det = t1t2 + p_vec;
 
     if (det < 0.00001) return 0;
 
     float inv_det = 1 / det;
-    Vector t_vec = vector_subtract(origin, t1);
-    double u = vector_dot_product(t_vec, p_vec) * inv_det;
+    Vector t_vec = origin - t1;
+    double u = (t_vec + p_vec) * inv_det;
 
     if (u < 0 || u > 1) return 0;
 
-    Vector q_vec = vector_cross_product(t_vec, t1t2);
-    double v = vector_dot_product(destination, q_vec) * inv_det;
+    Vector q_vec = t_vec * t1t2;
+    double v = (destination + q_vec) * inv_det;
 
     if (v < 0 || u + v > 1) return 0;
 
-    double t = vector_dot_product(t1t3, q_vec) * inv_det;
+    double t = (t1t3 + q_vec) * inv_det;
     return t;
 }
 
