@@ -54,21 +54,41 @@ void render(int width, int height, Vector camera_pos, Triangle triangles[], vect
 
 int main() {
     // Figure definition
-    Triangle triangles[] = {
-            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5)),
-            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(0.5, 0.5, 0.5)),
-            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
-            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, -0.5)),
-            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(-0.5, -0.5, -0.5)),
-            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(0.5, -0.5, -0.5)),
-            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5)),
-            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, -0.5, 0.5)),
-            Triangle(Vector(0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, 0.5)),
-            Triangle(Vector(0.5, 0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5)),
-            Triangle(Vector(-0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
-            Triangle(Vector(-0.5, 0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5))
-    };
-
+    ObjReader m;
+    m.readfile("cube.obj");
+    
+    Triangle **triangles = new Triangle*[m.faces.size()+1];
+    for (int i=0;i<m.faces.size();i++){
+        int v1 = m.faces[i].v1 - 1;
+        int v2 = m.faces[i].v2 - 1;
+        int v3 = m.faces[i].v3 - 1;
+        Vector V1 = Vector(m.vetexes[v1].x, m.vetexes[v1].y, m.vetexes[v1].z);
+        Vector V2 = Vector(m.vetexes[v2].x, m.vetexes[v2].y, m.vetexes[v2].z);
+        Vector V3 = Vector(m.vetexes[v3].x, m.vetexes[v3].y, m.vetexes[v3].z);
+        triangles[i] = new Triangle(V1, V2, V3);
+    }
+    
+    for (int i = 0;i < m.faces.size(); i++) {
+        double aX = (*triangles[i]).a.z;
+        cout << aX << endl;
+    }
+ 
+    
+//    Triangle triangles[] = {
+//            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5)),
+//            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(0.5, 0.5, 0.5)),
+//            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
+//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, -0.5)),
+//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(-0.5, -0.5, -0.5)),
+//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(0.5, -0.5, -0.5)),
+//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5)),
+//            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, -0.5, 0.5)),
+//            Triangle(Vector(0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, 0.5)),
+//            Triangle(Vector(0.5, 0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5)),
+//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
+//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5))
+//    };
+    
     // Initial values
     int width = 1080;
     int height = 720;
@@ -79,7 +99,7 @@ int main() {
     // Rendered pixels buffer
     vector<int> rendered_pixels;
 
-    render(width, height, camera_pos, triangles, rendered_pixels);
+    render(width, height, camera_pos, *triangles, rendered_pixels);
 
     ofstream out("out.ppm");
     if (!out) return EXIT_FAILURE;
@@ -94,4 +114,5 @@ int main() {
 
         out << r << " " << g << " " << b << "\n";
     }
+    delete [] triangles;
 }
