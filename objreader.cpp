@@ -16,7 +16,7 @@ void ObjReader::readfile(const char *filename) {
        if (s[0] == 'v' && s.size() == 1){
            vertex v;
            fin>>v.x>>v.y>>v.z;
-           this->vetexes.push_back(v);
+           this->vertexes.push_back(v);
        }
        if (s[0] == 'f' && s.size() == 1){
            face f;

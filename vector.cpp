@@ -5,7 +5,7 @@ Vector::Vector(const double c): x(c), y(c), z(c) {};
 Vector::Vector(const double x, const double y, const double z): x(x), y(y), z(z) {};
 
 Vector Vector::normalize() {
-    double length = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+    double length = this->len();
     return Vector(x / length, y / length, z / length);
 }
 

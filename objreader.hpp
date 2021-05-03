@@ -9,11 +9,13 @@ class ObjReader {
         double y;
         double z;
     };
+
     struct face{
         int v1,v2,v3;
     };
+
 public:
-    std::vector<vertex> vetexes;
+    std::vector<vertex> vertexes;
     std::vector<face> faces;
     void readfile(const char* filename);
 };
