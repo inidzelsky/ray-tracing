@@ -3,24 +3,24 @@
 #include <vector>
 #include <cmath>
 
+#include "imageInfo.hpp"
+#include "objreader.hpp"
+
+// Geometry
 #include "vector.hpp"
 #include "triangle.hpp"
-#include "objreader.hpp"
+
+// Intersection algorithms
 #include "intersectionAlgorithm.hpp"
 #include "mollerTrumboreAlgorithm.hpp"
 
+// Image writers
+#include "imageWriter.hpp"
+#include "ppmImageWriter.hpp"
+
 using namespace std;
 
-class ImageInfo {
-public:
-    int width;
-    int height;
-
-    ImageInfo(const int n): width(n), height(n) {}
-    ImageInfo(const int width, const int height): width(width), height(height) {}
-};
-
-void render(ImageInfo imageInfo, Vector camera_pos, Vector screen_pos, vector<Triangle> triangles, vector<int> &rendered_pixels) {
+void render(ImageInfo imageInfo, Vector camera_pos, Vector screen_pos, vector<Triangle> triangles, vector<bool> &rendered_pixels) {
     IntersectionAlgorithm *intersectionAlgorithm;
     intersectionAlgorithm = new MollerTrumboreAlgorithm();
     double image_ratio = imageInfo.width / (double)imageInfo.height;
@@ -70,21 +70,12 @@ int main() {
     Vector screen_pos = camera_pos - direction;
 
     // Rendered pixels buffer
-    vector<int> rendered_pixels;
+    vector<bool> renderedPixels;
 
-    render(imageInfo, camera_pos, screen_pos, triangles, rendered_pixels);
+    render(imageInfo, camera_pos, screen_pos, triangles, renderedPixels);
 
-    ofstream out("out.ppm");
-    if (!out) return EXIT_FAILURE;
+    ImageWriter *imageWriter;
+    imageWriter = new PpmImageWriter();
 
-    out << "P3\n";
-    out << "1080 720 255\n";
-
-    for (int i = 0; i < rendered_pixels.size(); i++) {
-        int r = rendered_pixels[i] ? 255 : 0;
-        int g = 0;
-        int b = 0;
-
-        out << r << " " << g << " " << b << "\n";
-    }
+    imageWriter->write(imageInfo, renderedPixels, "out.ppm");
 }
