@@ -9,6 +9,10 @@ Vector Vector::normalize() {
     return Vector(x / length, y / length, z / length);
 }
 
+double Vector::len() {
+    return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+}
+
 Vector Vector::operator * (Vector b) {
     double x = this->y * b.z - this->z * b.y;
     double y = this->z * b.x - this->x * b.z;

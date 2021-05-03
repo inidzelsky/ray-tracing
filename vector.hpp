@@ -11,6 +11,7 @@ public:
     Vector(double, double, double);
 
     Vector normalize();
+    double len();
 
     Vector operator * (Vector);
     double operator + (Vector);

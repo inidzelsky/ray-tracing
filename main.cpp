@@ -9,45 +9,54 @@
 
 using namespace std;
 
-double moller_triangle_intersect(Vector origin, Vector destination, Vector t1, Vector t2, Vector t3) {
-    Vector t1t2 = t1 - t2;
-    Vector t1t3 = t1 - t3;
-    Vector p_vec = destination * t1t3;
-    double det = t1t2 + p_vec;
-
-    if (det < 0.00001) return 0;
-
-    float inv_det = 1 / det;
-    Vector t_vec = origin - t1;
-    double u = (t_vec + p_vec) * inv_det;
-
-    if (u < 0 || u > 1) return 0;
-
-    Vector q_vec = t_vec * t1t2;
-    double v = (destination + q_vec) * inv_det;
-
-    if (v < 0 || u + v > 1) return 0;
-
-    double t = (t1t3 + q_vec) * inv_det;
-    return t;
+bool moller_trumbore_intersect(Vector rayOrigin, Vector rayVector, Triangle inTriangle)
+{
+    const float EPSILON = 0.0000001;
+    Vector vertex0 = inTriangle.a;
+    Vector vertex1 = inTriangle.b;
+    Vector vertex2 = inTriangle.c;
+    Vector edge1, edge2, h, s, q;
+    float a, f, u, v;
+    edge1 = vertex1 - vertex0;
+    edge2 = vertex2 - vertex0;
+    h = rayVector * edge2;
+    a = edge1 + h;
+    if (a > -EPSILON && a < EPSILON)
+        return false;    // This ray is parallel to this triangle.
+    f = 1.0 / a;
+    s = rayOrigin - vertex0;
+    u = f * (s + h);
+    if (u < 0.0 || u > 1.0)
+        return false;
+    q = s * edge1;
+    v = f * (rayVector + q);
+    if (v < 0.0 || u + v > 1.0)
+        return false;
+    // At this stage we can compute t to find out where the intersection point is on the line.
+    float t = f * (edge2 + q);
+    return true;
 }
 
-void render(int width, int height, Vector camera_pos, Triangle triangles[], vector<int> &rendered_pixels) {
+void render(int width, int height, Vector camera_pos, Vector screen_pos, vector<Triangle> triangles, vector<int> &rendered_pixels) {
    double image_ratio = width / (double)height;
-   double scale = tan(90 * M_PI / 360);
+   double fov = 60;
+   double scale = tan(fov / 180 * M_PI) * (screen_pos - camera_pos).len();
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             double pos_x = (2 * (j + 0.5) / (double)width - 1) * image_ratio * scale;
             double pos_y = (1 - 2 * (i + 0.5) / (double)height) * scale;
 
-            Vector direction = Vector(pos_x, pos_y, -1).normalize();
+            Vector direction = Vector(pos_x, pos_y, screen_pos.z).normalize();
+            bool is_intersection = false;
 
-            for (int o = 0; o < 11; o++) {
+            for (int o = 0; o < triangles.size(); o++) {
                 Triangle triangle = triangles[o];
-                double t = moller_triangle_intersect(camera_pos, direction, triangle.a, triangle.b, triangle.c);
-                rendered_pixels.push_back(t ? 1 : 0);
+                is_intersection = moller_trumbore_intersect(camera_pos, direction, triangle);
+                if (is_intersection) break;
             }
+
+            rendered_pixels.push_back(is_intersection ? 1 : 0);
         }
     }
 }
@@ -55,51 +64,32 @@ void render(int width, int height, Vector camera_pos, Triangle triangles[], vect
 int main() {
     // Figure definition
     ObjReader m;
-    m.readfile("cube.obj");
+    m.readfile("objects/cube.obj");
     
-    Triangle **triangles = new Triangle*[m.faces.size()+1];
-    for (int i=0;i<m.faces.size();i++){
+    vector<Triangle> triangles;
+    for (int i = 0; i < m.faces.size(); i++) {
         int v1 = m.faces[i].v1 - 1;
         int v2 = m.faces[i].v2 - 1;
         int v3 = m.faces[i].v3 - 1;
         Vector V1 = Vector(m.vetexes[v1].x, m.vetexes[v1].y, m.vetexes[v1].z);
         Vector V2 = Vector(m.vetexes[v2].x, m.vetexes[v2].y, m.vetexes[v2].z);
         Vector V3 = Vector(m.vetexes[v3].x, m.vetexes[v3].y, m.vetexes[v3].z);
-        triangles[i] = new Triangle(V1, V2, V3);
+        triangles.push_back(Triangle(V1, V2, V3));
     }
-    
-    for (int i = 0;i < m.faces.size(); i++) {
-        double aX = (*triangles[i]).a.z;
-        cout << aX << endl;
-    }
- 
-    
-//    Triangle triangles[] = {
-//            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5)),
-//            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, -0.5, 0.5), Vector(0.5, 0.5, 0.5)),
-//            Triangle(Vector(-0.5, 0.5, 0.5), Vector(0.5, 0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
-//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, 0.5), Vector(0.5, 0.5, -0.5)),
-//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(-0.5, -0.5, -0.5)),
-//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5), Vector(0.5, -0.5, -0.5)),
-//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5)),
-//            Triangle(Vector(-0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, -0.5, 0.5)),
-//            Triangle(Vector(0.5, -0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, 0.5)),
-//            Triangle(Vector(0.5, 0.5, 0.5), Vector(0.5, -0.5, -0.5), Vector(0.5, 0.5, -0.5)),
-//            Triangle(Vector(-0.5, -0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, -0.5)),
-//            Triangle(Vector(-0.5, 0.5, -0.5), Vector(-0.5, -0.5, 0.5), Vector(-0.5, 0.5, 0.5))
-//    };
     
     // Initial values
     int width = 1080;
     int height = 720;
 
-    // Define camera position
-    Vector camera_pos(0, 0, 0);
+    // Define camera and screen position
+    Vector camera_pos(0, 0, 10);
+    Vector direction (0, 0, -1);
+    Vector screen_pos = camera_pos - direction;
 
     // Rendered pixels buffer
     vector<int> rendered_pixels;
 
-    render(width, height, camera_pos, *triangles, rendered_pixels);
+    render(width, height, camera_pos, screen_pos, triangles, rendered_pixels);
 
     ofstream out("out.ppm");
     if (!out) return EXIT_FAILURE;
@@ -107,12 +97,13 @@ int main() {
     out << "P3\n";
     out << "1080 720 255\n";
 
+    cout << rendered_pixels.size() << endl;
+
     for (int i = 0; i < rendered_pixels.size(); i++) {
-        int r = rendered_pixels[i] ? 125 : 0;
-        int g = r;
-        int b = r;
+        int r = rendered_pixels[i] ? 255 : 0;
+        int g = 0;
+        int b = 0;
 
         out << r << " " << g << " " << b << "\n";
     }
-    delete [] triangles;
 }

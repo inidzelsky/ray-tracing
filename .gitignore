@@ -2,3 +2,12 @@ cmake-build-debug
 CMakeLists.txt
 .DS_Store
 .idea
+.vs
+CppProperties.json
+
+# Executables
+*.exe
+
+# Out images
+*.ppm
+*.bmp
