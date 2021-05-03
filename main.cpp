@@ -14,6 +14,10 @@
 #include "intersectionAlgorithm.hpp"
 #include "mollerTrumboreAlgorithm.hpp"
 
+// Scene readers
+#include "sceneReader.hpp"
+#include "objReader.hpp"
+
 // Image writers
 #include "imageWriter.hpp"
 #include "ppmImageWriter.hpp"
@@ -47,21 +51,12 @@ void render(ImageInfo imageInfo, Vector camera_pos, Vector screen_pos, vector<Tr
 }
 
 int main() {
-    // Figure definition
-    ObjReader m;
-    m.readfile("objects/cube.obj");
+    // Read the scene
+    SceneReader *sceneReader;
+    sceneReader = new ObjReader();
+    vector<Triangle> triangles = sceneReader->readScene("objects/cube.obj");
     
-    vector<Triangle> triangles;
-    for (int i = 0; i < m.faces.size(); i++) {
-        int v1 = m.faces[i].v1 - 1;
-        int v2 = m.faces[i].v2 - 1;
-        int v3 = m.faces[i].v3 - 1;
-        Vector V1 = Vector(m.vertexes[v1].x, m.vertexes[v1].y, m.vertexes[v1].z);
-        Vector V2 = Vector(m.vertexes[v2].x, m.vertexes[v2].y, m.vertexes[v2].z);
-        Vector V3 = Vector(m.vertexes[v3].x, m.vertexes[v3].y, m.vertexes[v3].z);
-        triangles.push_back(Triangle(V1, V2, V3));
-    }
-    
+    // Set final image info
     ImageInfo imageInfo(1080, 720);
 
     // Define camera and screen position
@@ -69,11 +64,13 @@ int main() {
     Vector direction (0, 0, -1);
     Vector screen_pos = camera_pos - direction;
 
-    // Rendered pixels buffer
+    // Define pixels buffer
     vector<bool> renderedPixels;
 
+    // Render the scene
     render(imageInfo, camera_pos, screen_pos, triangles, renderedPixels);
 
+    // Write pixels with the writer implementation
     ImageWriter *imageWriter;
     imageWriter = new PpmImageWriter();
 
